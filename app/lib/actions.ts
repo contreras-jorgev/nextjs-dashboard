@@ -64,7 +64,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
     });
 
     if (!validatedFields.success) {
-      console.log('Validation failed:', validatedFields.error.flatten());
+      // console.log('Validation failed:', validatedFields.error.flatten());
       return {
         errors: validatedFields.error.flatten().fieldErrors,
         message: 'Missing Fields. Failed to Create Invoice.',
@@ -81,7 +81,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
         VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
         RETURNING id`;
         
-        console.log('Insert successful, new invoice ID:', result.rows[0]?.id);
+        // console.log('Insert successful, new invoice ID:', result.rows[0]?.id);
         revalidatePath('/dashboard/invoices');
         throw redirect('/dashboard/invoices'); // Change: throw the redirect
     } catch (error) {
