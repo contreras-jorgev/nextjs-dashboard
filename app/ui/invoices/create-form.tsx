@@ -130,51 +130,6 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               </p>
             ))}
         </div>
-
-        <div className="mb-4">
-          <label htmlFor="description" className="mb-2 block text-sm font-medium">
-            Description
-          </label>
-          <div className="relative mt-2 rounded-md">
-            <input
-              id="description"
-              name="description"
-              type="text"
-              placeholder="Enter description"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-4 text-sm outline-2 placeholder:text-gray-500"
-            />
-          </div>
-          <div id="description-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.description &&
-              state.errors.description.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-              ))}
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="dueDate" className="mb-2 block text-sm font-medium">
-            Due Date
-          </label>
-          <div className="relative mt-2 rounded-md">
-            <input
-              id="dueDate"
-              name="dueDate"
-              type="date"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-4 text-sm outline-2 placeholder:text-gray-500"
-            />
-          </div>
-          <div id="dueDate-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.dueDate &&
-              state.errors.dueDate.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-              ))}
-          </div>
-        </div>
       </div>
       <div className="mt-6 flex justify-end gap-4">
         <Link

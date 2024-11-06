@@ -38,15 +38,11 @@ const FormSchema = z.object({
     invalid_type_error: 'Please select an invoice status.',
   }),
   date: z.string(),
-  description: z.string()
-  .min(3, { message: 'Description must be at least 3 characters.' })
-  .max(100, { message: 'Description cannot exceed 100 characters.' })
-  .optional(),
   dueDate: z.string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Please enter a valid date in YYYY-MM-DD format.' })
-  .optional(),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Please enter a valid date in YYYY-MM-DD format.' })
+    .optional(),
 });
-   
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export type State = {
@@ -54,46 +50,49 @@ export type State = {
     customerId?: string[];
     amount?: string[];
     status?: string[];
-    description?: string[];
     dueDate?: string[];    
   };
   message?: string | null;
 };
  
+// Update createInvoice function
 export async function createInvoice(prevState: State, formData: FormData) {
     const validatedFields = CreateInvoice.safeParse({
       customerId: formData.get('customerId'),
       amount: formData.get('amount'),
-      status: formData.get('status'),
-      description: formData.get('description'),
-      dueDate: formData.get('dueDate')
+      status: formData.get('status')
     });
 
     if (!validatedFields.success) {
+      console.log('Validation failed:', validatedFields.error.flatten());
       return {
         errors: validatedFields.error.flatten().fieldErrors,
         message: 'Missing Fields. Failed to Create Invoice.',
       };
     }
 
-    // Prepare data for insertion into the database
-    const { customerId, amount, status, description, dueDate } = validatedFields.data;
+    const { customerId, amount, status } = validatedFields.data;
     const amountInCents = Math.round(amount * 100);
     const date = new Date().toISOString().split('T')[0];
 
     try {
-        await sql`
-        INSERT INTO invoices (customer_id, amount, status, date, description, due_date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date}, ${description}, ${dueDate})
-      `;
+        const result = await sql`
+        INSERT INTO invoices (customer_id, amount, status, date)
+        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+        RETURNING id`;
+        
+        console.log('Insert successful, new invoice ID:', result.rows[0]?.id);
+        revalidatePath('/dashboard/invoices');
+        throw redirect('/dashboard/invoices'); // Change: throw the redirect
     } catch (error) {
-      return {
-        message: 'Database Error: Failed to Create Invoice.',
-      };
+        if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+            throw error; // Re-throw redirect errors
+        }
+        console.error('Database error:', error);
+        return {
+            message: 'Database Error: Failed to Create Invoice.',
+        };
     }
-
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
 }
 
 // Use Zod to update the expected types
