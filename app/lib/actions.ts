@@ -38,6 +38,13 @@ const FormSchema = z.object({
     invalid_type_error: 'Please select an invoice status.',
   }),
   date: z.string(),
+  description: z.string()
+  .min(3, { message: 'Description must be at least 3 characters.' })
+  .max(100, { message: 'Description cannot exceed 100 characters.' })
+  .optional(),
+  dueDate: z.string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Please enter a valid date in YYYY-MM-DD format.' })
+  .optional(),
 });
    
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
@@ -47,6 +54,8 @@ export type State = {
     customerId?: string[];
     amount?: string[];
     status?: string[];
+    description?: string[];
+    dueDate?: string[];    
   };
   message?: string | null;
 };
@@ -54,11 +63,12 @@ export type State = {
 export async function createInvoice(prevState: State, formData: FormData) {
     const validatedFields = CreateInvoice.safeParse({
       customerId: formData.get('customerId'),
-          amount: formData.get('amount'),
-          status: formData.get('status'),
-        });
+      amount: formData.get('amount'),
+      status: formData.get('status'),
+      description: formData.get('description'),
+      dueDate: formData.get('dueDate')
+    });
 
-    // If form validation fails, return errors early. Otherwise, continue.
     if (!validatedFields.success) {
       return {
         errors: validatedFields.error.flatten().fieldErrors,
@@ -67,14 +77,14 @@ export async function createInvoice(prevState: State, formData: FormData) {
     }
 
     // Prepare data for insertion into the database
-    const { customerId, amount, status } = validatedFields.data;
+    const { customerId, amount, status, description, dueDate } = validatedFields.data;
     const amountInCents = Math.round(amount * 100);
     const date = new Date().toISOString().split('T')[0];
 
     try {
         await sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+        INSERT INTO invoices (customer_id, amount, status, date, description, due_date)
+        VALUES (${customerId}, ${amountInCents}, ${status}, ${date}, ${description}, ${dueDate})
       `;
     } catch (error) {
       return {
